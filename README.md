@@ -1,24 +1,1000 @@
-# Voxchain
-Système de vote citoyen numérique - France
-cat > package.json << 'EOF'
-{
-  "name": "voxchain",
-  "version": "1.0.0",
-  "description": "Système de vote citoyen numérique - France",
-  "private": true,
-  "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "twilio": "^4.19.0",
-    "@sendgrid/mail": "^8.1.0",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+cat > public/index.html << 'ENDOFFILE'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxChain · La voix de la France</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Epilogue:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --B:#002395;--Bm:#1a3fcc;--Bl:#dce7ff;--Bxl:#f0f4ff;
+  --R:#ED2939;--Rl:#fdeaec;
+  --W:#F9F8F4;--K:#0d0d12;--P:#5c5c6e;--G:#e6e6f0;
+  --O:#c9a84c;--Ol:#fdf6e3;
+  --V:#1a7a4a;--Vl:#e6f4ee;
+  --bd:rgba(13,13,18,.1);--sh:0 2px 20px rgba(0,0,0,.06);
+  --r:12px;
+  --play:'Playfair Display',Georgia,serif;
+  --epi:'Epilogue',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
 }
-EOF
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--epi);background:var(--W);color:var(--K);min-height:100vh;overflow-x:hidden;}
+.tcb{height:4px;background:linear-gradient(90deg,var(--B) 33.33%,#fff 33.33% 66.66%,var(--R) 66.66%);position:fixed;top:0;left:0;right:0;z-index:500;}
+.hdr{position:fixed;top:4px;left:0;right:0;z-index:400;background:rgba(13,13,18,.97);backdrop-filter:blur(14px);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;cursor:pointer;}
+.logo-flag{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--B) 33%,#fff 33% 66%,var(--R) 66%);border:2px solid rgba(255,255,255,.18);flex-shrink:0;}
+.logo-text{color:#fff;font-family:var(--play);font-size:17px;font-weight:700;}
+.logo-sub{color:rgba(255,255,255,.35);font-size:9px;display:block;margin-top:-2px;letter-spacing:.08em;text-transform:uppercase;}
+.nav{display:flex;gap:2px;align-items:center;}
+.np{padding:5px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.55);font-family:var(--epi);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.np:hover{background:rgba(255,255,255,.09);color:#fff;}
+.np.on{background:var(--B);color:#fff;border-color:var(--B);}
+.np.ag{border-color:rgba(201,168,76,.35);color:rgba(201,168,76,.8);}
+.np.ag.on,.np.ag:hover{background:var(--O);color:#fff;border-color:var(--O);}
+.np.tr{border-color:rgba(26,122,74,.35);color:rgba(26,122,74,.8);}
+.np.tr.on,.np.tr:hover{background:var(--V);color:#fff;border-color:var(--V);}
+.app{padding-top:64px;}
+.sc{display:none;animation:rise .3s cubic-bezier(.22,1,.36,1);}
+.sc.vis{display:block;}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 24px 80px;}
+.wrap-sm{max-width:700px;margin:0 auto;padding:40px 24px 80px;}
+.hero{background:var(--K);min-height:calc(100vh - 64px);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:60px 24px 40px;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);background-size:52px 52px;}
+.hero-glow{position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(0,35,149,.18) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.hero-body{position:relative;text-align:center;max-width:820px;z-index:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1px solid rgba(201,168,76,.35);background:rgba(201,168,76,.07);color:var(--O);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:26px;}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--O);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1.hero-title{font-family:var(--play);font-size:clamp(38px,7vw,80px);color:#fff;line-height:1.04;font-weight:700;margin-bottom:20px;letter-spacing:-1.5px;}
+h1.hero-title em{color:var(--O);font-style:italic;}
+.hero-desc{color:rgba(255,255,255,.46);font-size:17px;font-weight:300;line-height:1.78;margin-bottom:36px;max-width:580px;margin-left:auto;margin-right:auto;}
+.hero-countdown{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:20px 32px;display:inline-flex;align-items:center;gap:24px;margin-bottom:36px;}
+.cd-unit{text-align:center;}
+.cd-num{font-family:var(--play);font-size:36px;color:#fff;line-height:1;font-weight:700;}
+.cd-lbl{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.cd-sep{font-family:var(--play);font-size:28px;color:rgba(255,255,255,.2);margin-bottom:16px;}
+.cd-info{font-size:12px;color:rgba(255,255,255,.38);margin-top:10px;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:52px;}
+.hbtn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:100px;font-family:var(--epi);font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .22s;}
+.hbtn-b{background:var(--B);color:#fff;}
+.hbtn-b:hover{background:var(--Bm);transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,35,149,.38);}
+.hbtn-o{background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);}
+.hbtn-o:hover{background:rgba(255,255,255,.08);color:#fff;}
+.hero-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;padding-top:36px;border-top:1px solid rgba(255,255,255,.07);}
+.hs-n{font-family:var(--play);font-size:26px;color:#fff;line-height:1;}
+.hs-l{font-size:10px;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.step-bar{display:flex;margin-bottom:32px;}
+.sn{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.sn:not(:last-child)::after{content:'';position:absolute;top:15px;left:58%;width:84%;height:2px;background:var(--G);z-index:0;transition:background .4s;}
+.sn.done:not(:last-child)::after{background:var(--V);}
+.sc2{width:30px;height:30px;border-radius:50%;border:2px solid var(--G);display:flex;align-items:center;justify-content:center;font-size:13px;background:#fff;position:relative;z-index:1;transition:all .3s;}
+.sn.act .sc2{border-color:var(--B);background:var(--Bl);}
+.sn.done .sc2{border-color:var(--V);background:var(--V);color:#fff;font-size:11px;}
+.slbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--P);margin-top:5px;}
+.sn.act .slbl{color:var(--B);}
+.sn.done .slbl{color:var(--V);}
+.pnl{display:none;}
+.pnl.on{display:block;animation:rise .28s ease;}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:24px 28px;box-shadow:var(--sh);}
+.card-b{border-left:4px solid var(--B);}
+.card-v{border-left:4px solid var(--V);}
+.card-r{border-left:4px solid var(--R);}
+.card-o{border-left:4px solid var(--O);}
+.ptag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--P);margin-bottom:6px;display:block;}
+.ptitle{font-family:var(--play);font-size:24px;margin-bottom:6px;}
+.pdesc{font-size:13px;color:var(--P);line-height:1.7;margin-bottom:20px;}
+.fld{margin-bottom:16px;}
+.fld label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--P);margin-bottom:6px;}
+.fld input,.fld select{width:100%;padding:11px 13px;border:1.5px solid var(--G);border-radius:9px;font-family:var(--epi);font-size:14px;background:var(--W);color:var(--K);outline:none;transition:border-color .2s,box-shadow .2s;}
+.fld input:focus,.fld select:focus{border-color:var(--B);box-shadow:0 0 0 3px rgba(0,35,149,.08);background:#fff;}
+.cni-in{font-family:var(--mono)!important;font-size:16px!important;letter-spacing:.08em!important;}
+.demo-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;background:var(--Ol);color:var(--O);border:1px dashed var(--O);font-size:11px;font-weight:600;margin-bottom:10px;}
+.orow{display:flex;gap:7px;justify-content:center;margin:16px 0 4px;}
+.od{width:48px;height:56px;border:2px solid var(--G);border-radius:10px;font-family:var(--mono);font-size:22px;font-weight:500;text-align:center;background:var(--W);color:var(--K);outline:none;transition:all .2s;}
+.od:focus{border-color:var(--B);box-shadow:0 0 0 3px rgba(0,35,149,.08);background:#fff;}
+.od.ok{border-color:var(--B);}
+.otimer{text-align:center;font-size:12px;color:var(--P);margin-bottom:4px;}
+.otimer.red{color:var(--R);font-weight:600;}
+.lbtn{background:none;border:none;color:var(--B);font-size:12px;cursor:pointer;text-decoration:underline;font-family:var(--epi);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 24px;border-radius:100px;font-family:var(--epi);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;border:1.5px solid transparent;}
+.btn-b{background:var(--B);color:#fff;}
+.btn-b:hover{background:var(--Bm);transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,35,149,.26);}
+.btn-v{background:var(--V);color:#fff;}
+.btn-v:hover{background:#135c38;transform:translateY(-1px);}
+.btn-o{background:var(--O);color:#fff;}
+.btn-g{background:transparent;border-color:var(--G);color:var(--K);}
+.btn-g:hover{background:var(--G);}
+.btn-r{background:var(--Rl);color:var(--R);border-color:#f0c4bf;}
+.btn-full{width:100%;}
+.btn-sm{padding:7px 15px;font-size:12px;}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none!important;}
+.vbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:20px 0 8px;}
+.VOUI{background:var(--V);color:#fff;font-size:17px;padding:16px 44px;border-radius:14px;border:none;cursor:pointer;font-family:var(--epi);font-weight:600;transition:all .2s;}
+.VOUI:hover{background:#135c38;transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,122,74,.3);}
+.VNON{background:var(--R);color:#fff;font-size:17px;padding:16px 44px;border-radius:14px;border:none;cursor:pointer;font-family:var(--epi);font-weight:600;transition:all .2s;}
+.VNON:hover{background:#c4202f;transform:translateY(-2px);box-shadow:0 8px 24px rgba(237,41,57,.3);}
+.VABS{background:#fff;color:var(--P);border:2px solid var(--G);font-size:17px;padding:14px 32px;border-radius:14px;cursor:pointer;font-family:var(--epi);font-weight:600;transition:all .2s;}
+.VABS:hover{background:var(--G);transform:translateY(-1px);}
+.ref-card{background:var(--K);border-radius:20px;padding:28px 32px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden;}
+.ref-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--B) 33%,#fff 33% 66%,var(--R) 66%);}
+.ref-live{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--R);display:inline-block;animation:pulse 1.5s infinite;}
+.ref-q{font-family:var(--play);font-size:22px;line-height:1.35;font-weight:600;margin-bottom:8px;}
+.ref-d{font-size:13px;color:rgba(255,255,255,.44);line-height:1.7;}
+.ref-meta{margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.32);}
+.ref-meta strong{color:rgba(255,255,255,.62);}
+.res-hero{background:var(--K);border-radius:20px;padding:32px 36px;color:#fff;margin-bottom:22px;position:relative;overflow:hidden;}
+.res-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--B) 33%,#fff 33% 66%,var(--R) 66%);}
+.s3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0;}
+.sc3{background:rgba(255,255,255,.07);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,.07);}
+.snum{font-family:var(--play);font-size:32px;line-height:1;}
+.spct{font-family:var(--mono);font-size:12px;opacity:.5;margin-top:3px;}
+.snam{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.38;margin-top:4px;}
+.barmega{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:4px 0 18px;}
+.bm-v{background:var(--V);transition:width .8s cubic-bezier(.4,0,.2,1);}
+.bm-a{background:#6b7280;}
+.bm-r{background:var(--R);}
+.tblwrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bd);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{padding:10px 13px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--P);background:var(--G);text-align:left;}
+th:not(:first-child){text-align:right;}
+td{padding:11px 13px;border-top:1px solid #f0f0f6;vertical-align:middle;}
+td:not(:first-child){text-align:right;}
+tr:hover td{background:#f6f6fc;}
+.chat-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;}
+.chat-main{background:#fff;border:1px solid var(--bd);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;height:600px;}
+.chat-header{padding:16px 20px;border-bottom:1px solid var(--bd);background:var(--K);color:#fff;}
+.chat-header-title{font-family:var(--play);font-size:17px;margin-bottom:2px;}
+.chat-header-sub{font-size:11px;color:rgba(255,255,255,.4);}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--G);border-radius:2px;}
+.msg{max-width:78%;animation:rise .2s ease;}
+.msg-in{align-self:flex-start;}
+.msg-bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55;}
+.msg-in .msg-bubble{background:var(--G);color:var(--K);border-bottom-left-radius:4px;}
+.msg-admin .msg-bubble{background:linear-gradient(135deg,#1a1a2e,var(--B));color:#fff;border:1px solid rgba(0,35,149,.3);}
+.msg-admin-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--O);margin-bottom:4px;}
+.msg-meta{font-size:10px;color:var(--P);margin-top:3px;padding:0 4px;}
+.chat-input-area{padding:14px 16px;border-top:1px solid var(--bd);background:#fff;}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-input{flex:1;padding:10px 14px;border:1.5px solid var(--G);border-radius:100px;font-family:var(--epi);font-size:13px;outline:none;transition:border-color .2s;background:var(--W);}
+.chat-input:focus{border-color:var(--B);}
+.chat-send{width:38px;height:38px;border-radius:50%;background:var(--B);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .18s;flex-shrink:0;}
+.chat-send:hover{background:var(--Bm);transform:scale(1.05);}
+.chat-sidebar{display:flex;flex-direction:column;gap:14px;}
+.chat-topic{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px 20px;}
+.chat-rules{background:var(--Bxl);border:1px solid var(--Bl);border-radius:var(--r);padding:16px 18px;font-size:12px;color:var(--B);}
+.chat-rules ul{margin-top:8px;padding-left:14px;line-height:1.9;}
+.chat-online{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;}
+.online-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--P);margin-bottom:10px;}
+.online-count{font-family:var(--play);font-size:28px;color:var(--K);}
+.tr-hero{background:linear-gradient(135deg,#071207,#0d1f0d);border-radius:20px;padding:32px 36px;color:#fff;margin-bottom:22px;position:relative;overflow:hidden;}
+.tr-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--V),#4ade80,var(--V));}
+.cv{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:9px;font-size:13px;font-weight:600;margin-bottom:18px;}
+.cv-ok{background:var(--Vl);color:var(--V);}
+.cv-err{background:var(--Rl);color:var(--R);}
+.cv-load{background:var(--Bl);color:var(--B);}
+.tr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px;}
+.tr-stat{background:#fff;border:1px solid var(--bd);border-radius:9px;padding:14px;text-align:center;}
+.tr-n{font-family:var(--play);font-size:24px;color:var(--K);line-height:1;}
+.tr-l{font-size:10px;color:var(--P);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-top:3px;}
+.audit-line{position:relative;padding-left:28px;}
+.audit-line::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:repeating-linear-gradient(to bottom,var(--V) 0,var(--V) 5px,transparent 5px,transparent 11px);opacity:.18;}
+.ablock{position:relative;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:13px 15px;margin-bottom:8px;font-size:12px;}
+.ablock::before{content:'';position:absolute;left:-19px;top:15px;width:7px;height:7px;border-radius:50%;background:var(--V);border:2px solid var(--W);}
+.ablock-g::before{background:var(--O);}
+.ablock-pack{border:2px solid var(--V);background:#f0faf4;}
+.ablock-pack::before{background:var(--V);width:11px;height:11px;left:-21px;top:13px;}
+.ablock-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px;}
+.afield{display:flex;gap:5px;margin-top:3px;}
+.afk{font-size:10px;color:var(--P);font-weight:600;min-width:96px;flex-shrink:0;}
+.afv{font-family:var(--mono);font-size:10px;word-break:break-all;}
+.afv-em{font-family:var(--mono);font-size:10px;color:var(--B);word-break:break-all;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;}
+.b-b{background:var(--Bl);color:var(--B);}
+.b-v{background:var(--Vl);color:var(--V);}
+.b-r{background:var(--Rl);color:var(--R);}
+.b-o{background:var(--Ol);color:#7a5a00;}
+.b-g{background:var(--G);color:var(--P);}
+.b-live{background:#fee2e2;color:var(--R);animation:pulse 1.8s infinite;}
+.b-pack{background:var(--Vl);color:var(--V);border:1px solid var(--V);}
+.alt{padding:11px 14px;border-radius:9px;font-size:12px;font-weight:500;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;}
+.alt-i{background:var(--Bl);color:var(--B);}
+.alt-ok{background:var(--Vl);color:var(--V);}
+.alt-w{background:var(--Ol);color:#7a5a00;}
+.alt-e{background:var(--Rl);color:var(--R);}
+.swrap{text-align:center;padding:40px 24px;}
+.sbadge{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 18px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
+.sbadge-v{background:var(--Vl);border:3px solid var(--V);}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.stitle{font-family:var(--play);font-size:24px;margin-bottom:7px;}
+.ssub{font-size:13px;color:var(--P);line-height:1.7;max-width:420px;margin:0 auto 20px;}
+.hbox{background:var(--K);color:rgba(255,255,255,.68);font-family:var(--mono);font-size:11px;border-radius:9px;padding:12px 15px;word-break:break-all;text-align:left;margin-bottom:20px;line-height:1.85;}
+.agrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+#toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;transform:translateY(80px);opacity:0;transition:all .32s cubic-bezier(.34,1.56,.64,1);z-index:9999;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.16);pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.ok{background:var(--V);color:#fff;}
+#toast.err{background:var(--R);color:#fff;}
+#toast.inf{background:var(--K);color:#fff;}
+hr{border:none;border-top:1px solid var(--G);margin:18px 0;}
+@media(max-width:680px){
+  .hdr{padding:0 14px;}
+  .nav .np span{display:none;}
+  .s3,.agrid2{grid-template-columns:1fr;}
+  .vbtns{flex-direction:column;}
+  .VOUI,.VNON,.VABS{width:100%;justify-content:center;}
+  .od{width:40px;height:50px;font-size:19px;}
+  .chat-wrap{grid-template-columns:1fr;}
+  .hero-countdown{gap:14px;padding:16px 20px;}
+  .cd-num{font-size:26px;}
+}
+</style>
+</head>
+<body>
+<div class="tcb"></div>
+<header class="hdr">
+  <div class="logo" onclick="go('home',document.querySelector('.np'))">
+    <div class="logo-flag"></div>
+    <div><span class="logo-text">VoxChain</span><span class="logo-sub">La voix de la France</span></div>
+  </div>
+  <nav class="nav">
+    <button class="np on"  onclick="go('home',this)">Accueil</button>
+    <button class="np"     onclick="go('vote',this)">🗳 <span>Voter</span></button>
+    <button class="np"     onclick="go('res',this)">📊 <span>Résultats</span></button>
+    <button class="np"     onclick="go('chat',this)">💬 <span>Chat</span></button>
+    <button class="np tr"  onclick="go('tr',this)">🔍 <span>Blockchain</span></button>
+    <button class="np"     onclick="go('admin',this)">⚙️ <span>Admin</span></button>
+  </nav>
+</header>
+<div class="app">
+
+<!-- ACCUEIL -->
+<div id="sc-home" class="sc vis">
+<section class="hero">
+  <div class="hero-grid"></div><div class="hero-glow"></div>
+  <div class="hero-body">
+    <div class="hero-badge"><span class="hero-badge-dot"></span>Vote national · Question de la semaine</div>
+    <h1 class="hero-title">La voix<br>de la <em>France</em></h1>
+    <p class="hero-desc">Chaque citoyen français peut voter sur les grandes questions du pays. Anonymat garanti. Chaque vote inscrit dans une blockchain publique et vérifiable par tous.</p>
+    <div class="hero-countdown">
+      <div class="cd-unit"><div class="cd-num" id="cd-d">--</div><div class="cd-lbl">Jours</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-h">--</div><div class="cd-lbl">Heures</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-m">--</div><div class="cd-lbl">Min</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-num" id="cd-s">--</div><div class="cd-lbl">Sec</div></div>
+    </div>
+    <div class="cd-info" id="cd-info">Vote ouvert jusqu'au dimanche à 20h00</div>
+    <div class="hero-btns">
+      <button class="hbtn hbtn-b" onclick="go('vote',document.querySelectorAll('.np')[1])">🗳 Voter maintenant</button>
+      <button class="hbtn hbtn-o" onclick="go('chat',document.querySelectorAll('.np')[3])">💬 Débattre</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hs-n" id="h-votes">0</div><div class="hs-l">Votes enregistrés</div></div>
+      <div><div class="hs-n" id="h-blocs">--</div><div class="hs-l">Blocs blockchain</div></div>
+      <div><div class="hs-n">48,75M</div><div class="hs-l">Citoyens éligibles</div></div>
+      <div><div class="hs-n">13</div><div class="hs-l">Régions</div></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- VOTE -->
+<div id="sc-vote" class="sc">
+<div class="wrap-sm">
+  <div class="step-bar" id="sbar">
+    <div class="sn act" id="sn0"><div class="sc2">🪪</div><div class="slbl">CNI</div></div>
+    <div class="sn" id="sn1"><div class="sc2">📱</div><div class="slbl">SMS</div></div>
+    <div class="sn" id="sn2"><div class="sc2">✉</div><div class="slbl">Email</div></div>
+    <div class="sn" id="sn3"><div class="sc2">🗳</div><div class="slbl">Vote</div></div>
+  </div>
+  <div id="p0" class="pnl on">
+    <span class="ptag">Étape 1 — Carte Nationale d'Identité</span>
+    <div class="ptitle">Vérification de votre identité</div>
+    <p class="pdesc">Votre CNI génère un identifiant unique anonyme. Elle n'est jamais envoyée au serveur.</p>
+    <div class="card">
+      <div class="fld"><label>Numéro CNI (12 chiffres)</label>
+        <input id="inp-cni" class="cni-in" maxlength="12" placeholder="123456789012" oninput="this.value=this.value.replace(/\D/g,'').slice(0,12)">
+        <div style="font-size:11px;color:var(--P);margin-top:4px">Traité localement — jamais transmis au serveur</div>
+      </div>
+      <div class="fld"><label>Date de naissance</label>
+        <input type="date" id="inp-dob" max="2006-01-01">
+      </div>
+      <div class="fld"><label>Région de résidence</label>
+        <div id="rgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:7px;margin-top:4px"></div>
+      </div>
+      <div style="margin-top:18px"><button class="btn btn-b btn-full" onclick="p0next()">Continuer → Vérification SMS</button></div>
+    </div>
+  </div>
+  <div id="p1" class="pnl">
+    <span class="ptag">Étape 2 — Téléphone</span>
+    <div class="ptitle">Vérification par SMS</div>
+    <p class="pdesc">Entrez votre numéro de téléphone pour recevoir un code.</p>
+    <div class="card">
+      <div class="fld"><label>Numéro de téléphone français</label>
+        <input id="inp-tel" type="tel" placeholder="06 12 34 56 78" maxlength="14" oninput="fmtTel(this)">
+      </div>
+      <button class="btn btn-b" id="send-sms-btn" onclick="sendSMS()" style="margin-bottom:14px">Envoyer le code SMS →</button>
+      <div id="sms-area" style="display:none">
+        <div class="demo-tag" id="sms-demo-tag" style="display:none">⚡ Code démo : <span id="sms-show" style="font-family:var(--mono);font-weight:700;letter-spacing:.1em"></span></div>
+        <div class="orow" id="otp-sms">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',0)" onkeydown="ok(event,this,'sms',0)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',1)" onkeydown="ok(event,this,'sms',1)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',2)" onkeydown="ok(event,this,'sms',2)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',3)" onkeydown="ok(event,this,'sms',3)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',4)" onkeydown="ok(event,this,'sms',4)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'sms',5)" onkeydown="ok(event,this,'sms',5)">
+        </div>
+        <div class="otimer" id="t-sms">Expire dans <strong id="cd-sms">05:00</strong></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-b" onclick="vSMS()">Valider le SMS →</button>
+          <button class="lbtn" onclick="rSMS()">Renvoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="p2" class="pnl">
+    <span class="ptag">Étape 3 — E-mail</span>
+    <div class="ptitle">Vérification par e-mail</div>
+    <p class="pdesc">Les 3 facteurs (CNI + téléphone + e-mail) génèrent votre identifiant unique anonyme.</p>
+    <div class="card">
+      <div class="fld"><label>Adresse e-mail</label>
+        <input id="inp-email" type="email" placeholder="prenom.nom@exemple.fr">
+      </div>
+      <button class="btn btn-b" id="send-mail-btn" onclick="sendMail()" style="margin-bottom:14px">Envoyer le code e-mail →</button>
+      <div id="mail-area" style="display:none">
+        <div class="demo-tag" id="mail-demo-tag" style="display:none">⚡ Code démo : <span id="mail-show" style="font-family:var(--mono);font-weight:700;letter-spacing:.1em"></span></div>
+        <div class="orow" id="otp-mail">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',0)" onkeydown="ok(event,this,'mail',0)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',1)" onkeydown="ok(event,this,'mail',1)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',2)" onkeydown="ok(event,this,'mail',2)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',3)" onkeydown="ok(event,this,'mail',3)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',4)" onkeydown="ok(event,this,'mail',4)">
+          <input class="od" maxlength="1" inputmode="numeric" oninput="od(this,'mail',5)" onkeydown="ok(event,this,'mail',5)">
+        </div>
+        <div class="otimer" id="t-mail">Expire dans <strong id="cd-mail">05:00</strong></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-b" onclick="vMail()">Valider l'e-mail →</button>
+          <button class="lbtn" onclick="rMail()">Renvoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="p3" class="pnl">
+    <div id="vote-panel"></div>
+    <div id="vote-ok" style="display:none">
+      <div class="card swrap">
+        <div class="sbadge sbadge-v">🗳</div>
+        <div class="stitle" style="color:var(--V)">Vote enregistré dans la blockchain</div>
+        <div class="ssub">Votre vote a été anonymisé (SHA-256) et inscrit de façon permanente. Vérifiable dans l'onglet Blockchain.</div>
+        <div class="hbox" id="vote-hbox"></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-v" onclick="go('tr',document.querySelectorAll('.np')[4])">🔍 Vérifier</button>
+          <button class="btn btn-g btn-sm" onclick="fullReset()">← Retour</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- RÉSULTATS -->
+<div id="sc-res" class="sc">
+<div class="wrap" id="res-body"></div>
+</div>
+
+<!-- CHAT -->
+<div id="sc-chat" class="sc">
+<div class="wrap">
+  <div style="margin-bottom:22px">
+    <div style="font-family:var(--play);font-size:28px;margin-bottom:4px">Forum citoyen</div>
+    <p style="font-size:14px;color:var(--P)">Débattez de la question en cours. Vos échanges guident les prochaines questions.</p>
+  </div>
+  <div class="chat-wrap">
+    <div class="chat-main">
+      <div class="chat-header">
+        <div class="chat-header-title">💬 Discussion publique</div>
+        <div class="chat-header-sub" id="chat-sub">Chargement…</div>
+      </div>
+      <div class="chat-messages" id="chat-msgs"></div>
+      <div class="chat-input-area">
+        <input id="chat-pseudo" style="width:100%;padding:7px 12px;border:1.5px solid var(--G);border-radius:100px;font-family:var(--epi);font-size:12px;outline:none;background:var(--W);margin-bottom:6px" placeholder="Votre prénom (public)" maxlength="24">
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chat-input" rows="1" placeholder="Votre message…" maxlength="500" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="chat-send" onclick="sendMsg()">↑</button>
+        </div>
+        <div style="font-size:10px;color:var(--P);margin-top:5px">Entrée pour envoyer · Respect et courtoisie</div>
+      </div>
+    </div>
+    <div class="chat-sidebar">
+      <div class="chat-topic">
+        <div style="font-family:var(--play);font-size:15px;margin-bottom:8px">Question en cours</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;background:#fee2e2;color:var(--R);font-size:10px;font-weight:600;margin-bottom:10px;animation:pulse 1.8s infinite"><span class="ldot"></span>Vote ouvert</div>
+        <div style="font-size:13px;font-weight:500;line-height:1.5" id="chat-topic-q">Chargement…</div>
+        <button class="btn btn-b btn-sm btn-full" style="margin-top:14px" onclick="go('vote',document.querySelectorAll('.np')[1])">→ Voter</button>
+      </div>
+      <div class="chat-online">
+        <div class="online-title">En ligne</div>
+        <div class="online-count" id="online-n">--</div>
+        <div style="font-size:11px;color:var(--P)">citoyens connectés</div>
+      </div>
+      <div class="chat-rules">
+        <strong>Règles du forum</strong>
+        <ul>
+          <li>Respectez les autres</li>
+          <li>Argumentez avec des faits</li>
+          <li>Pas d'insultes</li>
+          <li>Messages modérés</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- BLOCKCHAIN -->
+<div id="sc-tr" class="sc">
+<div class="wrap">
+  <div class="tr-hero">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#4ade80;margin-bottom:8px">🔍 Audit public · Blockchain vérifiable</div>
+    <div style="font-family:var(--play);font-size:28px;color:#fff;margin-bottom:7px">Transparence cryptographique</div>
+    <p style="font-size:14px;color:rgba(255,255,255,.46);max-width:620px;line-height:1.7">Chaque vote est un bloc SHA-256 lié au précédent. Toute modification invalide la chaîne entière. Accessible sans identification.</p>
+  </div>
+  <div id="tr-validity" class="cv cv-load">⟳ Vérification…</div>
+  <div class="tr-grid" id="tr-stats"></div>
+  <div class="card card-v" style="margin-bottom:18px">
+    <div style="font-family:var(--play);font-size:17px;margin-bottom:12px">🔐 Garantie d'anonymat</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12px">
+      <div>
+        <div style="font-weight:600;margin-bottom:6px">Stocké dans la blockchain</div>
+        <div style="background:var(--W);border:1px solid var(--G);border-radius:8px;padding:11px;font-family:var(--mono);font-size:11px;line-height:1.8">
+          voterHash: <span style="color:var(--B)">sha256(CNI+tel+email)</span><br>
+          vote: <span style="color:var(--V)">"OUI"|"NON"|"ABS"</span><br>
+          region: <span style="color:var(--O)">"idf"|"ara"|…</span><br>
+          prevHash: <span style="color:var(--P)">hash bloc N-1</span><br>
+          hash: <span style="color:var(--R)">sha256(bloc entier)</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:6px">Jamais stocké</div>
+        <div style="background:var(--Rl);border:1px solid #f0c4bf;border-radius:8px;padding:11px;font-size:12px;line-height:2">
+          ✗ CNI brute<br>✗ Numéro de téléphone<br>✗ Adresse e-mail<br>✗ Nom ou identité<br>✗ Adresse IP
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:7px">Vérifier votre vote</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="v-cni" style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--G);border-radius:8px;font-family:var(--mono);font-size:13px" placeholder="CNI" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'').slice(0,12)">
+        <input id="v-tel" style="flex:1;min-width:110px;padding:9px 12px;border:1.5px solid var(--G);border-radius:8px;font-family:var(--epi);font-size:13px" placeholder="Téléphone">
+        <input id="v-email" style="flex:1;min-width:150px;padding:9px 12px;border:1.5px solid var(--G);border-radius:8px;font-family:var(--epi);font-size:13px" placeholder="E-mail">
+        <button class="btn btn-v btn-sm" onclick="verifyVote()">Vérifier</button>
+      </div>
+      <div id="verify-result" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+    <button class="btn btn-g btn-sm" onclick="renderTr()">↻ Rafraîchir</button>
+    <button class="btn btn-g btn-sm" onclick="dlJSON()">⬇ JSON</button>
+    <button class="btn btn-g btn-sm" onclick="dlCSV()">⬇ CSV</button>
+  </div>
+  <div class="audit-line" id="tr-blocks"></div>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div id="sc-admin" class="sc">
+<div class="wrap-sm">
+  <div id="adm-gate">
+    <div style="font-family:var(--play);font-size:28px;margin-bottom:6px">Administration</div>
+    <p style="color:var(--P);font-size:13px;margin-bottom:22px">Accès réservé — administrateur unique VoxChain.</p>
+    <div class="card" style="max-width:400px">
+      <div class="fld"><label>Mot de passe</label>
+        <input type="password" id="apwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')aLogin()">
+      </div>
+      <button class="btn btn-b btn-full" onclick="aLogin()">Accéder →</button>
+    </div>
+  </div>
+  <div id="adm-panel" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-family:var(--play);font-size:28px;margin-bottom:2px">Panneau Admin</div>
+        <div style="font-size:12px;color:var(--P)">VoxChain · Administrateur unique</div>
+      </div>
+      <button class="btn btn-g btn-sm" onclick="aLogout()">Déconnexion</button>
+    </div>
+    <div class="card card-b" style="margin-bottom:14px">
+      <div style="font-family:var(--play);font-size:17px;margin-bottom:12px">Question du scrutin</div>
+      <div id="adm-ref-disp"></div>
+      <hr>
+      <div class="fld"><label>Nouvelle question</label><input id="rq" placeholder="Êtes-vous favorable à… ?"></div>
+      <div class="fld"><label>Description</label>
+        <textarea id="rd" style="width:100%;padding:10px 13px;border:1.5px solid var(--G);border-radius:9px;font-family:var(--epi);font-size:13px;background:var(--W);outline:none;resize:vertical;min-height:70px" placeholder="Contexte, enjeux…"></textarea>
+      </div>
+      <div style="font-size:12px;color:var(--P);margin-bottom:12px">📅 Ouverture le lundi · Clôture dimanche 20h00</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-b btn-sm" onclick="setRef()">✓ Activer</button>
+        <button class="btn btn-v btn-sm" onclick="consolidate()">⬡ Consolider et fermer</button>
+        <button class="btn btn-g btn-sm" onclick="closeRef()">Fermer</button>
+      </div>
+    </div>
+    <div class="agrid2">
+      <div class="card card-v">
+        <div style="font-family:var(--play);font-size:16px;margin-bottom:12px">Statistiques</div>
+        <div style="font-family:var(--play);font-size:36px" id="adm-vote-count">--</div>
+        <div style="font-size:12px;color:var(--P);margin-top:4px">votes enregistrés</div>
+        <div id="adm-regs" style="margin-top:14px;font-size:12px"></div>
+      </div>
+      <div class="card card-r">
+        <div style="font-family:var(--play);font-size:16px;margin-bottom:10px">Maintenance</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <button class="btn btn-g btn-sm" onclick="dlJSON()">⬇ Export JSON</button>
+          <button class="btn btn-g btn-sm" onclick="dlCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div style="font-family:var(--play);font-size:16px;margin-bottom:12px">Derniers messages du forum</div>
+      <div id="adm-chat" style="font-size:13px;color:var(--P)">Chargement…</div>
+      <hr>
+      <div style="font-family:var(--play);font-size:15px;margin-bottom:10px">Envoyer un message admin</div>
+      <div style="display:flex;gap:8px">
+        <input id="adm-msg" style="flex:1;padding:9px 12px;border:1.5px solid var(--G);border-radius:8px;font-family:var(--epi);font-size:13px;outline:none" placeholder="Message officiel…">
+        <button class="btn btn-b btn-sm" onclick="adminChat()">Envoyer</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const API = '';
+const REGS=[{id:'idf',n:'Île-de-France',v:8650000},{id:'ara',n:'Auvergne-Rhône-Alpes',v:4920000},{id:'naq',n:'Nouvelle-Aquitaine',v:4350000},{id:'occ',n:'Occitanie',v:3980000},{id:'hdf',n:'Hauts-de-France',v:3740000},{id:'ges',n:'Grand Est',v:3350000},{id:'pdl',n:'Pays de la Loire',v:2850000},{id:'nor',n:'Normandie',v:2620000},{id:'bfc',n:'Bourgogne-Franche-Comté',v:2150000},{id:'bre',n:'Bretagne',v:2820000},{id:'cvl',n:'Centre-Val de Loire',v:2130000},{id:'pac',n:"Provence-Alpes-Côte d'Azur",v:3950000},{id:'cor',n:'Corse',v:240000}];
+
+let A={cni:null,tel:null,email:null,region:null,smsSid:null,mailSid:null,authSid:null};
+let Tm={};let selReg=null;let chatPoll=null;
+
+async function sha256client(str){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+async function apicall(path,opts={}){
+  const r=await fetch(API+path,{headers:{'Content-Type':'application/json',...(opts.headers||{})},method:opts.method||'GET',...(opts.body&&{body:JSON.stringify(opts.body)})});
+  return r.json();
+}
+
+function otp2(){return String(Math.floor(100000+Math.random()*900000));}
+function fmtTel(i){let v=i.value.replace(/\D/g,'');if(v.length>10)v=v.slice(0,10);i.value=v.replace(/(\d{2})(?=\d)/g,'$1 ').trim();}
+
+function buildRgrid(){
+  document.getElementById('rgrid').innerHTML=REGS.map(r=>`
+    <button onclick="selR('${r.id}')" id="rb-${r.id}"
+      style="padding:9px 12px;border-radius:8px;border:1.5px solid var(--G);background:var(--W);font-family:var(--epi);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:5px;transition:all .15s;width:100%">
+      <span>${r.n}</span><span style="font-size:10px;opacity:.5;font-family:var(--mono)">${(r.v/1e6).toFixed(1)}M</span>
+    </button>`).join('');
+}
+function selR(id){
+  selReg=id;
+  REGS.forEach(r=>{
+    const el=document.getElementById('rb-'+r.id);if(!el)return;
+    el.style.borderColor=r.id===id?'var(--B)':'var(--G)';
+    el.style.background=r.id===id?'var(--Bl)':'var(--W)';
+    el.style.color=r.id===id?'var(--B)':'inherit';
+  });
+}
+
+function p0next(){
+  const cni=document.getElementById('inp-cni').value.trim();
+  const dob=document.getElementById('inp-dob').value;
+  if(cni.length!==12)return toast('CNI : 12 chiffres requis','err');
+  if(!dob)return toast('Date de naissance requise','err');
+  if((new Date()-new Date(dob))/31557600000<18)return toast('Vous devez avoir 18 ans','err');
+  if(!selReg)return toast('Sélectionnez votre région','err');
+  A.cni=cni;A.region=selReg;
+  goP(1);toast('CNI validée ✓','ok');
+}
+
+async function sendSMS(){
+  const tel=document.getElementById('inp-tel').value.replace(/\s/g,'');
+  if(tel.length<10)return toast('Numéro invalide','err');
+  A.tel=tel;
+  try{
+    const r=await apicall('/api/send-otp',{method:'POST',body:{type:'sms',value:tel}});
+    if(r.error)return toast(r.error,'err');
+    A.smsSid=r.sessionId;
+    document.getElementById('sms-area').style.display='block';
+    document.getElementById('send-sms-btn').style.display='none';
+    if(r.demoCode){
+      document.getElementById('sms-demo-tag').style.display='inline-flex';
+      document.getElementById('sms-show').textContent=r.demoCode;
+    }
+    startT('sms',300);toast('Code SMS envoyé ✓','ok');
+  }catch{toast('Erreur envoi SMS','err');}
+}
+
+async function sendMail(){
+  const email=document.getElementById('inp-email').value.trim();
+  if(!email.includes('@'))return toast('Email invalide','err');
+  A.email=email;
+  try{
+    const r=await apicall('/api/send-otp',{method:'POST',body:{type:'email',value:email}});
+    if(r.error)return toast(r.error,'err');
+    A.mailSid=r.sessionId;
+    document.getElementById('mail-area').style.display='block';
+    document.getElementById('send-mail-btn').style.display='none';
+    if(r.demoCode){
+      document.getElementById('mail-demo-tag').style.display='inline-flex';
+      document.getElementById('mail-show').textContent=r.demoCode;
+    }
+    startT('mail',300);toast('Code e-mail envoyé ✓','ok');
+  }catch{toast('Erreur envoi email','err');}
+}
+
+function od(inp,type,i){
+  inp.value=inp.value.replace(/\D/g,'').slice(-1);inp.classList.toggle('ok',inp.value!=='');
+  if(inp.value&&i<5)document.querySelectorAll('#otp-'+type+' .od')[i+1]?.focus();
+  const all=[...document.querySelectorAll('#otp-'+type+' .od')];
+  if(all.every(d=>d.value))setTimeout(()=>type==='sms'?vSMS():vMail(),250);
+}
+function ok(e,inp,type,i){if(e.key==='Backspace'&&!inp.value&&i>0){const p=document.querySelectorAll('#otp-'+type+' .od')[i-1];if(p){p.value='';p.classList.remove('ok');p.focus();}}}
+function getOTP(type){return[...document.querySelectorAll('#otp-'+type+' .od')].map(d=>d.value).join('');}
+function startT(type,sec){
+  clearInterval(Tm[type]);let r=sec;
+  const cd=document.getElementById('cd-'+type),tm=document.getElementById('t-'+type);
+  Tm[type]=setInterval(()=>{r--;if(cd)cd.textContent=String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0');if(tm)tm.className='otimer'+(r<60?' red':'');if(r<=0)clearInterval(Tm[type]);},1000);
+}
+async function vSMS(){
+  const code=getOTP('sms');if(code.length!==6)return toast('Entrez les 6 chiffres','err');
+  try{
+    const r=await apicall('/api/verify-otp',{method:'POST',body:{sessionId:A.smsSid,code,step:'sms'}});
+    if(r.error)return toast(r.error,'err');
+    clearInterval(Tm.sms);mD(1);goP(2);toast('✓ SMS vérifié','ok');
+  }catch{toast('Erreur vérification','err');}
+}
+function rSMS(){document.getElementById('sms-area').style.display='none';document.getElementById('send-sms-btn').style.display='inline-flex';A.smsSid=null;}
+async function vMail(){
+  const code=getOTP('mail');if(code.length!==6)return toast('Entrez les 6 chiffres','err');
+  try{
+    const voterHash=await sha256client('vcfr_'+A.cni+'_'+A.tel.replace(/\s/g,'')+'_'+A.email.toLowerCase());
+    const r=await apicall('/api/verify-otp',{method:'POST',body:{sessionId:A.mailSid,code,step:'email',voterData:{voterHash,region:A.region}}});
+    if(r.error)return toast(r.error,'err');
+    A.authSid=r.authSessionId;
+    clearInterval(Tm.mail);mD(2);goP(3);renderVoteP();toast('✓ Triple auth validée — vous pouvez voter','ok');
+  }catch{toast('Erreur vérification','err');}
+}
+function rMail(){document.getElementById('mail-area').style.display='none';document.getElementById('send-mail-btn').style.display='inline-flex';A.mailSid=null;}
+
+function goP(n){
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p'+n).classList.add('on');
+  document.querySelectorAll('#sbar .sn').forEach((el,i)=>{if(!el.classList.contains('done'))el.classList.toggle('act',i===n);});
+}
+function mD(n){const el=document.getElementById('sn'+n);el.classList.remove('act');el.classList.add('done');el.querySelector('.sc2').textContent='✓';}
+
+async function renderVoteP(){
+  const el=document.getElementById('vote-panel');
+  document.getElementById('vote-ok').style.display='none';el.style.display='block';
+  try{
+    const r=await apicall('/api/results');
+    if(!r.active){el.innerHTML='<div class="alt alt-w">⚠️ Aucun vote en cours. Revenez lundi.</div>';return;}
+    const {scrutin,votes}=r.active;
+    const total=votes.total,p=n=>total>0?Math.round(n/total*100):0;
+    el.innerHTML=`
+      <div class="ref-card">
+        <div class="ref-live"><span class="ldot"></span>Vote national · Clôture dimanche 20h</div>
+        <div class="ref-q">${scrutin.question}</div>
+        ${scrutin.description?`<div class="ref-d">${scrutin.description}</div>`:''}
+        <div class="ref-meta">
+          <span>${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span>
+          <span>Votes : <strong>${total.toLocaleString('fr-FR')}</strong></span>
+          <span>Région : <strong>${REGS.find(r=>r.id===A.region)?.n||''}</strong></span>
+        </div>
+      </div>
+      <div class="card" style="text-align:center;padding:28px">
+        <div style="font-size:14px;color:var(--P);margin-bottom:4px">Vote anonyme, définitif et inscrit dans la blockchain.</div>
+        <div style="font-size:12px;color:var(--V);font-weight:600;margin-bottom:20px">✓ Triple authentification validée — CNI + téléphone + e-mail</div>
+        <div class="vbtns">
+          <button class="VOUI" onclick="castVote('OUI')">✓ OUI</button>
+          <button class="VABS" onclick="castVote('ABSTENTION')">○ Abstention</button>
+          <button class="VNON" onclick="castVote('NON')">✗ NON</button>
+        </div>
+        <div style="font-size:11px;color:var(--P);margin-top:12px">Ce vote est irréversible.</div>
+      </div>`;
+  }catch{el.innerHTML='<div class="alt alt-e">Erreur de connexion. Vérifiez votre connexion.</div>';}
+}
+
+async function castVote(vote){
+  if(!A.authSid)return;
+  try{
+    const voterHash=await sha256client('vcfr_'+A.cni+'_'+A.tel.replace(/\s/g,'')+'_'+A.email.toLowerCase());
+    const r=await apicall('/api/vote',{method:'POST',body:{authSessionId:A.authSid,vote,voterHash,region:A.region}});
+    if(r.error)return toast(r.error,'err');
+    A.cni=null;A.tel=null;A.email=null;A.authSid=null;
+    document.getElementById('vote-panel').style.display='none';
+    document.getElementById('vote-ok').style.display='block';
+    document.getElementById('vote-hbox').innerHTML=`Bloc n°     : #${r.blocIndex}\nHash SHA-256: ${r.hash}\nVote        : ${vote}\nTimestamp   : ${r.ts}`;
+    mD(3);homeStats();toast(`Vote "${vote}" inscrit bloc #${r.blocIndex} ✓`,'ok');
+  }catch{toast('Erreur lors du vote','err');}
+}
+
+async function verifyVote(){
+  const cni=document.getElementById('v-cni').value.trim();
+  const tel=document.getElementById('v-tel').value.replace(/\s/g,'');
+  const email=document.getElementById('v-email').value.trim().toLowerCase();
+  if(!cni||!tel||!email)return toast('Remplissez les 3 champs','err');
+  const vH=await sha256client('vcfr_'+cni+'_'+tel+'_'+email);
+  try{
+    const r=await apicall('/api/chain?validate=false&limit=1000');
+    const bloc=r.chain?.find(b=>b.type==='vote'&&b.voter_hash===vH);
+    const el=document.getElementById('verify-result');
+    if(bloc){
+      el.innerHTML=`<div class="alt alt-ok">✓ Vote trouvé — Bloc <strong>#${bloc.bloc_index}</strong> · Vote : <strong>${bloc.vote}</strong> · ${new Date(bloc.ts).toLocaleString('fr-FR')} · Hash : <span style="font-family:var(--mono);font-size:10px">${bloc.hash.slice(0,28)}…</span></div>`;
+    } else {
+      el.innerHTML=`<div class="alt alt-w">Aucun vote enregistré avec ces identifiants.</div>`;
+    }
+  }catch{toast('Erreur vérification','err');}
+}
+
+async function renderRes(){
+  const el=document.getElementById('res-body');
+  try{
+    const r=await apicall('/api/results');
+    let html='';
+    if(r.active){
+      const {scrutin,votes,byRegion}=r.active;
+      const t=votes.total,p=n=>t>0?Math.round(n/t*100):0;
+      html+=`<div class="res-hero">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.36);margin-bottom:7px">Question de la semaine</div>
+        <div style="font-family:var(--play);font-size:20px;color:#fff;margin-bottom:6px">${scrutin.question}</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.42)"><span class="ldot"></span>Vote en cours · Clôture dimanche 20h</div>
+        <div class="s3"><div class="sc3"><div class="snum" style="color:#6ee7b7">${votes.oui.toLocaleString('fr-FR')}</div><div class="spct">${p(votes.oui)}%</div><div class="snam">OUI</div></div><div class="sc3"><div class="snum" style="color:#fca5a5">${votes.non.toLocaleString('fr-FR')}</div><div class="spct">${p(votes.non)}%</div><div class="snam">NON</div></div><div class="sc3"><div class="snum" style="color:#d1d5db">${votes.abstention.toLocaleString('fr-FR')}</div><div class="spct">${p(votes.abstention)}%</div><div class="snam">ABS</div></div></div>
+        <div class="barmega"><div class="bm-v" style="width:${p(votes.oui)}%"></div><div class="bm-a" style="width:${p(votes.abstention)}%"></div><div class="bm-r" style="width:${p(votes.non)}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.3);flex-wrap:wrap;gap:6px">
+          <span>Total : <strong style="color:rgba(255,255,255,.58)">${t.toLocaleString('fr-FR')}</strong></span>
+          <span>Éligibles : <strong style="color:rgba(255,255,255,.58)">48 750 000</strong></span>
+          <span>Participation : <strong style="color:rgba(255,255,255,.58)">${t>0?(t/487500*0.01).toFixed(4):'0.0000'}%</strong></span>
+        </div>
+      </div>
+      <div style="font-family:var(--play);font-size:19px;margin:22px 0 14px">Par région</div>
+      <div class="tblwrap"><table>
+        <thead><tr><th>Région</th><th>Inscrits</th><th>Votes</th><th>OUI</th><th>NON</th><th>Abs.</th></tr></thead>
+        <tbody>${REGS.map(r=>{const d=byRegion[r.id]||{oui:0,non:0,abs:0,total:0};const t2=d.total,po=t2?Math.round(d.oui/t2*100):0,pn=t2?Math.round(d.non/t2*100):0;
+          return`<tr><td style="font-weight:500">${r.n}</td><td style="font-family:var(--mono);color:var(--P)">${(r.v/1e6).toFixed(2)}M</td><td style="font-family:var(--mono)">${t2.toLocaleString('fr-FR')}</td><td style="color:var(--V);font-weight:700;font-family:var(--mono)">${d.oui} <span style="font-size:10px;opacity:.6">${po}%</span></td><td style="color:var(--R);font-weight:700;font-family:var(--mono)">${d.non} <span style="font-size:10px;opacity:.6">${pn}%</span></td><td style="color:var(--P);font-family:var(--mono)">${d.abs}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+    if(r.history?.length){
+      html+=`<div style="font-family:var(--play);font-size:19px;margin:28px 0 14px">Scrutins clôturés</div>`;
+      r.history.forEach(pk=>{
+        const t=pk.total_votes||0,p=n=>t>0?Math.round(n/t*100):0;
+        html+=`<div class="card card-v" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px"><span class="badge b-pack">⬡ Consolidé</span><span style="font-size:11px;color:var(--P)">${new Date(pk.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</span></div><div style="font-family:var(--play);font-size:16px;margin-bottom:10px">${pk.referendum}</div><div style="display:flex;gap:16px;font-size:13px"><span style="color:var(--V);font-weight:700">${pk.oui} OUI (${p(pk.oui)}%)</span><span style="color:var(--R);font-weight:700">${pk.non} NON (${p(pk.non)}%)</span><span style="color:var(--P)">${pk.abstention} ABS</span><span>Total: ${t}</span></div></div>`;
+      });
+    }
+    if(!html)html='<div class="alt alt-i">Aucun scrutin actif.</div>';
+    el.innerHTML=html;
+  }catch{el.innerHTML='<div class="alt alt-e">Erreur de connexion.</div>';}
+}
+
+async function renderTr(){
+  try{
+    const r=await apicall('/api/chain?validate=true&limit=200');
+    const chain=r.chain||[];
+    const val=r.validation;
+    const vEl=document.getElementById('tr-validity');
+    vEl.className='cv '+(val?.valid?'cv-ok':'cv-err');
+    vEl.innerHTML=`<span>${val?.valid?'🔒':'⚠️'}</span> ${val?.valid?`✓ ${chain.length} blocs vérifiés — intégrité parfaite`:val?.error||'Erreur'}`;
+    const votes=chain.filter(b=>b.type==='vote'),packs=chain.filter(b=>b.type==='pack');
+    document.getElementById('tr-stats').innerHTML=`
+      <div class="tr-stat"><div class="tr-n">${chain.length}</div><div class="tr-l">Blocs</div></div>
+      <div class="tr-stat"><div class="tr-n">${votes.length}</div><div class="tr-l">Votes</div></div>
+      <div class="tr-stat"><div class="tr-n" style="color:var(--V)">${packs.length}</div><div class="tr-l">Paquets</div></div>
+      <div class="tr-stat"><div class="tr-n" style="color:var(--V)">${votes.filter(v=>v.vote==='OUI').length}</div><div class="tr-l">OUI</div></div>
+      <div class="tr-stat"><div class="tr-n" style="color:var(--R)">${votes.filter(v=>v.vote==='NON').length}</div><div class="tr-l">NON</div></div>
+    `;
+    document.getElementById('tr-blocks').innerHTML=[...chain].reverse().map(b=>{
+      if(b.type==='genesis')return`<div class="ablock ablock-g"><div class="ablock-top"><span style="font-weight:700">#0</span><span class="badge b-o">⬡ GENÈSE</span><span style="font-size:10px;color:var(--P)">${b.ts}</span></div><div class="afield"><span class="afk">Hash</span><span class="afv">${b.hash}</span></div></div>`;
+      if(b.type==='vote'){const vc=b.vote==='OUI'?'b-v':b.vote==='NON'?'b-r':'b-g';const rn=REGS.find(r=>r.id===b.region)?.n||b.region;return`<div class="ablock"><div class="ablock-top"><span style="font-weight:700">#${b.bloc_index}</span><span class="badge b-b">VOTE</span><span class="badge ${vc}">${b.vote}</span><span style="font-size:10px;color:var(--P)">${b.ts}</span></div><div class="afield"><span class="afk">Région</span><span class="afv">${rn}</span></div><div class="afield"><span class="afk">Votant (hash)</span><span class="afv-em">${b.voter_hash}</span></div><div class="afield"><span class="afk">Hash SHA-256</span><span class="afv">${b.hash}</span></div><div class="afield"><span class="afk">Hash précédent</span><span class="afv">${b.prev_hash?.slice(0,44)}…</span></div></div>`;}
+      if(b.type==='pack'){const t=b.total_votes||0,p=n=>t>0?Math.round(n/t*100):0;return`<div class="ablock ablock-pack"><div class="ablock-top"><span style="font-weight:700">#${b.bloc_index}</span><span class="badge b-pack">⬡ PAQUET</span><span style="font-size:10px;color:var(--P)">${b.ts}</span></div><div class="afield"><span class="afk">Question</span><span class="afv" style="font-weight:600">${b.referendum}</span></div><div class="afield"><span class="afk">Résultat</span><span class="afv">OUI:${b.oui}(${p(b.oui)}%) NON:${b.non}(${p(b.non)}%) ABS:${b.abstention}</span></div><div class="afield"><span class="afk">Hash racine</span><span class="afv-em">${b.root_hash}</span></div><div class="afield"><span class="afk">Hash SHA-256</span><span class="afv">${b.hash}</span></div></div>`;}
+      return'';
+    }).join('')||'<p style="color:var(--P);padding:20px">Aucun bloc.</p>';
+  }catch{document.getElementById('tr-blocks').innerHTML='<div class="alt alt-e">Erreur de connexion.</div>';}
+}
+
+async function renderChat(){
+  try{
+    const r=await apicall('/api/results');
+    const q=r.active?.scrutin?.question||'Aucune question active';
+    document.getElementById('chat-topic-q').textContent=q;
+    document.getElementById('chat-sub').textContent=q.slice(0,50)+'…';
+    document.getElementById('online-n').textContent=Math.floor(20+Math.random()*160);
+  }catch{}
+  loadMsgs();
+}
+async function loadMsgs(){
+  try{
+    const r=await apicall('/api/chat');
+    const el=document.getElementById('chat-msgs');
+    const atBot=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+    el.innerHTML=(r.messages||[]).map(m=>{
+      const cls='msg msg-in'+(m.is_admin?' msg-admin':'');
+      return`<div class="${cls}">${m.is_admin?'<div class="msg-admin-badge">⚡ Admin VoxChain</div>':''}<div class="msg-bubble">${esc(m.message)}</div><div class="msg-meta">${esc(m.pseudo)} · ${new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    }).join('');
+    if(atBot||!r.messages?.length)el.scrollTop=el.scrollHeight;
+  }catch{}
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function sendMsg(){
+  const input=document.getElementById('chat-input');
+  const pseudo=document.getElementById('chat-pseudo').value.trim()||'Citoyen';
+  const message=input.value.trim();
+  if(!message)return;
+  input.value='';
+  try{
+    await apicall('/api/chat',{method:'POST',body:{pseudo,message}});
+    loadMsgs();
+  }catch{toast('Erreur envoi message','err');}
+}
+
+async function homeStats(){
+  try{
+    const r=await apicall('/api/chain?limit=1&offset=0');
+    const el=document.getElementById('h-votes');if(el)el.textContent=(r.total||0).toLocaleString('fr-FR');
+    const bl=document.getElementById('h-blocs');if(bl)bl.textContent=(r.total||0);
+  }catch{}
+}
+
+function getNextSunday20h(){
+  const now=new Date(),day=now.getDay(),days=day===0?7:7-day;
+  const next=new Date(now);next.setDate(now.getDate()+days);next.setHours(20,0,0,0);return next;
+}
+function updateCD(){
+  const diff=getNextSunday20h()-new Date();
+  if(diff<=0){['cd-d','cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).textContent='00');return;}
+  document.getElementById('cd-d').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
+  document.getElementById('cd-h').textContent=String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
+  document.getElementById('cd-m').textContent=String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  document.getElementById('cd-s').textContent=String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+}
+
+function go(name,btn){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('vis'));
+  document.querySelectorAll('.np').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sc-'+name).classList.add('vis');
+  if(btn)btn.classList.add('on');
+  if(name==='res')renderRes();
+  if(name==='tr')renderTr();
+  if(name==='chat'){renderChat();if(!chatPoll)chatPoll=setInterval(()=>{if(document.getElementById('sc-chat').classList.contains('vis'))loadMsgs();},3000);}
+  if(name==='admin'){aRefRender();aStatsRender();}
+  homeStats();
+}
+
+const APWD='admin2024';
+let adminToken=null;
+function aLogin(){
+  if(document.getElementById('apwd').value!==APWD)return toast('Mot de passe incorrect','err');
+  adminToken=APWD;
+  document.getElementById('adm-gate').style.display='none';
+  document.getElementById('adm-panel').style.display='block';
+  aRefRender();aStatsRender();
+}
+function aLogout(){adminToken=null;document.getElementById('adm-gate').style.display='block';document.getElementById('adm-panel').style.display='none';}
+async function aRefRender(){
+  const el=document.getElementById('adm-ref-disp');
+  try{
+    const r=await apicall('/api/results');
+    el.innerHTML=r.active?`<div class="alt alt-ok"><strong>En cours :</strong> ${r.active.scrutin.question}</div>`:'<div class="alt alt-w">Aucune question active.</div>';
+    if(r.active){document.getElementById('rq').value=r.active.scrutin.question;document.getElementById('rd').value=r.active.scrutin.description||'';}
+  }catch{el.innerHTML='<div class="alt alt-e">Erreur connexion</div>';}
+}
+async function aStatsRender(){
+  try{
+    const r=await apicall('/api/admin',{method:'POST',body:{action:'get_stats'},headers:{Authorization:'Bearer '+adminToken}});
+    document.getElementById('adm-vote-count').textContent=(r.voteCount||0).toLocaleString('fr-FR');
+    document.getElementById('adm-chat').innerHTML=(r.lastMessages||[]).map(m=>`<div style="padding:5px 0;border-bottom:1px solid var(--G)"><strong style="font-size:11px">${esc(m.pseudo)}</strong> <span style="font-size:12px">${esc(m.message.slice(0,80))}</span></div>`).join('')||'Aucun message.';
+  }catch{}
+}
+async function setRef(){
+  const q=document.getElementById('rq').value.trim(),d=document.getElementById('rd').value.trim();
+  if(!q)return toast('Question requise','err');
+  try{
+    const r=await apicall('/api/admin',{method:'POST',body:{action:'create_scrutin',question:q,description:d},headers:{Authorization:'Bearer '+adminToken}});
+    if(r.error)return toast(r.error,'err');
+    aRefRender();toast('Question activée ✓','ok');
+  }catch{toast('Erreur','err');}
+}
+async function consolidate(){
+  try{
+    const res=await apicall('/api/results');
+    if(!res.active)return toast('Aucun scrutin actif','err');
+    if(!confirm('Consolider ?'))return;
+    const r=await apicall('/api/admin',{method:'POST',body:{action:'consolidate',question:res.active.scrutin.question},headers:{Authorization:'Bearer '+adminToken}});
+    if(r.error)return toast(r.error,'err');
+    aRefRender();toast('Consolidé ✓','ok');
+  }catch{toast('Erreur','err');}
+}
+async function closeRef(){
+  if(!confirm('Fermer sans consolider ?'))return;
+  try{
+    await apicall('/api/admin',{method:'POST',body:{action:'close_scrutin'},headers:{Authorization:'Bearer '+adminToken}});
+    aRefRender();toast('Fermé','inf');
+  }catch{toast('Erreur','err');}
+}
+async function adminChat(){
+  const msg=document.getElementById('adm-msg').value.trim();
+  if(!msg)return;
+  try{
+    await apicall('/api/admin',{method:'POST',body:{action:'admin_chat',message:msg},headers:{Authorization:'Bearer '+adminToken}});
+    document.getElementById('adm-msg').value='';
+    toast('Message envoyé ✓','ok');
+  }catch{toast('Erreur','err');}
+}
+
+async function dlJSON(){
+  try{const r=await apicall('/api/chain?limit=10000');dl(new Blob([JSON.stringify(r.chain,null,2)],{type:'application/json'}),'voxchain_'+now()+'.json');}catch{toast('Erreur export','err');}
+}
+async function dlCSV(){
+  try{
+    const r=await apicall('/api/chain?limit=10000');
+    const v=r.chain?.filter(b=>b.type==='vote')||[];
+    const rows=[['bloc','ts','vote','region','referendum','voter_hash','hash']];
+    v.forEach(x=>rows.push([x.bloc_index,x.ts,x.vote,x.region,x.referendum,x.voter_hash,x.hash]));
+    dl(new Blob([rows.map(r=>r.map(x=>`"${String(x||'').replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}),'votes_'+now()+'.csv');
+  }catch{toast('Erreur export','err');}
+}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function now(){return new Date().toISOString().slice(0,10);}
+
+let _tt;
+function toast(msg,type='inf'){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+type;clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);}
+
+function fullReset(){
+  A={cni:null,tel:null,email:null,region:null,smsSid:null,mailSid:null,authSid:null};selReg=null;
+  Object.values(Tm).forEach(t=>clearInterval(t));Tm={};
+  document.getElementById('inp-cni').value='';
+  document.getElementById('inp-dob').value='';
+  document.getElementById('inp-tel').value='';
+  document.getElementById('inp-email').value='';
+  document.getElementById('sms-area').style.display='none';
+  document.getElementById('mail-area').style.display='none';
+  document.getElementById('send-sms-btn').style.display='inline-flex';
+  document.getElementById('send-mail-btn').style.display='inline-flex';
+  ['sms','mail'].forEach(t=>document.querySelectorAll('#otp-'+t+' .od').forEach(d=>{d.value='';d.classList.remove('ok');}));
+  buildRgrid();
+  document.getElementById('vote-panel').style.display='block';
+  document.getElementById('vote-panel').innerHTML='';
+  document.getElementById('vote-ok').style.display='none';
+  document.querySelectorAll('#sbar .sn').forEach((el,i)=>{el.className='sn'+(i===0?' act':'');el.querySelector('.sc2').textContent=['🪪','📱','✉','🗳'][i];});
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p0').classList.add('on');
+  go('home',document.querySelector('.np'));
+}
+
+function boot(){
+  buildRgrid();
+  updateCD();setInterval(updateCD,1000);
+  homeStats();
+}
+boot();
+</script>
+</body>
+</html>
+ENDOFFILE
+
+git add .
+git commit -m "feat: ajout site complet dans public/index.html"
+git push
+
+echo ""
+echo "✅ DONE — Le site est sur GitHub"
+echo "Vercel va redéployer automatiquement dans 1-2 minutes"
+echo "Visitez : https://voxchain-nine.vercel.app"
